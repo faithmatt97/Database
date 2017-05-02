@@ -24,6 +24,8 @@ DROP TABLE IF EXISTS nonEdibleMaterials CASCADE;
 DROP TABLE IF EXISTS nonEdibleEffects CASCADE;
 DROP TABLE IF EXISTS MaterialswithEffects CASCADE;
 
+DROP TABLE IF EXISTS PlayerInventory;
+
 DROP TABLE IF EXISTS hasitem CASCADE;
 
 CREATE SEQUENCE IF NOT EXISTS lid_id_seq;
@@ -31,16 +33,14 @@ CREATE SEQUENCE IF NOT EXISTS xid_id_seq;
 CREATE SEQUENCE IF NOT EXISTS monID_id_seq;
 CREATE SEQUENCE IF NOT EXISTS pid_id_seq;
 
-
-
 CREATE ROLE admin;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO admin;
 
-CREATE ROLE player
+CREATE ROLE player;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM player;
 GRANT INSERT ON Players, PlayerInventory TO player;
 GRANT UPDATE ON Players, PlayerInventory TO player;
-GRANT SELECT ON ALL TABLES IN SCHEMA public; TO player;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO player;
 
 
 CREATE TYPE typeOfMaterial AS ENUM ('Fruit', 'Vegetation' , 'Meat', 
@@ -56,26 +56,26 @@ CREATE TYPE effect AS ENUM ('None','Heat Resistance', 'Cold Resistance',
 
 CREATE TYPE effectStr AS ENUM ('None','Low', 'Med' ,'High');
 
-CREATE TYPE aType AS ENUM ('Head', 'Feet', 'Body');
+CREATE TYPE aType AS ENUM ('Head', 'Feet', 'Body', 'Shield');
 CREATE TABLE IF NOT EXISTS Locations (
-  lid INT default nextval('lid_id_seq')primary key NOT NULL,
+  lid INT default nextval('lid_id_seq')primary key NOT NULL UNIQUE,
   locationName TEXT NOT NULL
   
 );
 
 CREATE TABLE IF NOT EXISTS Items (
-  xid         INT default nextval('xid_id_seq')UNIQUE  NOT NULL,
+  xid         INT default nextval('xid_id_seq')UNIQUE  NOT NULL 
   itemName    TEXT NOT NULL UNIQUE,
   Primary Key (xid)  
 );
 CREATE TABLE IF NOT EXISTS Players(
-  pid         INT default nextval('pid_id_seq')UNIQUE  NOT NULL,
+  pid         INT default nextval('pid_id_seq')UNIQUE  NOT NULL UNIQUE
   playerName  TEXT NOT NULL,
   Primary Key (pid)
 );
 CREATE TABLE IF NOT EXISTS PlayerInventory (
   pid	 	  INT NOT NULL REFERENCES players(pid),
-  xid         INT NOT NULL REFERENCES items(xid), 
+  xid         INT NOT NULL REFERENCES items(xid) UNIQUE
   Qty         INT NOT NULL,
   Primary Key (pid, xid)
 );
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS Weapons (
 );
 	
 CREATE TABLE IF NOT EXISTS Monsters(
-  monID           INT default nextval('monID_id_seq'),
+  monID           INT default nextval('monID_id_seq') UNIQUE,
   monsterName     TEXT NOT NULL,
   Primary Key (monID)
 );
@@ -342,10 +342,12 @@ VALUES
 
 INSERT INTO PlayerInventory
 VALUES
-(1,31, 2),
-(1,2, 20),
-(1,4, 100),
-(2,7,1);
+(3, 1, 14);
+(1,10, 2),
+(1,11, 20),
+(1,15, 100),
+(2,9,1);
+
 
 --List all weapons and their attack stats
 CREATE OR REPLACE VIEW WeaponStats AS
@@ -476,8 +478,18 @@ AFTER UPDATE on PlayerInventory
 FOR EACH ROW
 EXECUTE PROCEDURE removeFromInvent();
 
-select locHasItems('Zoras Domain', 'results');
-Fetch all from results; 
+Create or replace VIEW PlayerInventoryMaterialStats AS
+select playername, playerinventory.xid, itemname, typeOfMaterial,qty, salepricerupees, lid
+From players, playerinventory, materials, items, hasItem
+Where playerinventory.xid=materials.xid AND players.pid=playerinventory.pid AND playerinventory.xid=items.xid 
+AND hasitem.xid=playerinventory.xid
+
+
+
+
+
+
+
 
 
 
