@@ -31,6 +31,18 @@ CREATE SEQUENCE IF NOT EXISTS xid_id_seq;
 CREATE SEQUENCE IF NOT EXISTS monID_id_seq;
 CREATE SEQUENCE IF NOT EXISTS pid_id_seq;
 
+
+
+CREATE ROLE admin;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO admin;
+
+CREATE ROLE player
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM player;
+GRANT INSERT ON Players, PlayerInventory TO player;
+GRANT UPDATE ON Players, PlayerInventory TO player;
+GRANT SELECT ON ALL TABLES IN SCHEMA public; TO player;
+
+
 CREATE TYPE typeOfMaterial AS ENUM ('Fruit', 'Vegetation' , 'Meat', 
                                     'Elixir', 'Food', 'Machinery', 
                                     'Critter', 'Ore' ,'Monster Part');
